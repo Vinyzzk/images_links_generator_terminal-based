@@ -62,35 +62,37 @@ def upload_images():
     data = []
 
     for folder in os.listdir("converted"):
-        links = []
-        links_bling_excel = []
-        for img in os.listdir(f"converted/{folder}"):
-            name, ext = os.path.splitext(img)
-            if not img.endswith(".txt"):
-                with open(f"converted/{folder}/{img}", "rb") as file:
-                    url = "https://api.imgbb.com/1/upload"
-                    payload = {
-                        "key": token,
-                        "image": base64.b64encode(file.read()),
-                    }
-                    res = requests.post(url, data=payload)
-                    res = res.json()
-                    res = res.get("data")
-                    res = res.get("url")
-                    links.append(f"{res}\n")
-                    links_bling_excel.append(res)
+        folder_path = os.path.join("converted", folder)
+        if os.path.isdir(folder_path):
+            links = []
+            links_bling_excel = []
+            for img in os.listdir(folder_path):
+                name, ext = os.path.splitext(img)
+                if not img.endswith(".txt"):
+                    with open(os.path.join(folder_path, img), "rb") as file:
+                        url = "https://api.imgbb.com/1/upload"
+                        payload = {
+                            "key": token,
+                            "image": base64.b64encode(file.read()),
+                        }
+                        res = requests.post(url, data=payload)
+                        res = res.json()
+                        res = res.get("data")
+                        res = res.get("url")
+                        links.append(f"{res}\n")
+                        links_bling_excel.append(res)
 
-        my_separator = "|"
-        links.sort()  # Ordenar os links em ordem alfabética
-        links_bling = my_separator.join(links)  # Separar os links com o separador definido
-        links_bling_excel = my_separator.join(links_bling_excel)  # Separar os links com SKU com o separador definido
-        
-        with open(f"converted/{folder}/url.txt", "w+") as txt:
-            txt.writelines(links)
-        with open(f"converted/{folder}/url_bling.txt", "w+") as txt2:
-            txt2.write(links_bling)
+            my_separator = "|"
+            links.sort()  # Ordenar os links em ordem alfabética
+            links_bling = my_separator.join(links)  # Separar os links com o separador definido
+            links_bling_excel = my_separator.join(links_bling_excel)  # Separar os links com SKU com o separador definido
 
-        data.append({"SKU": folder, "Links": links_bling_excel})
+            with open(os.path.join(folder_path, "url.txt"), "w+") as txt:
+                txt.writelines(links)
+            with open(os.path.join(folder_path, "url_bling.txt"), "w+") as txt2:
+                txt2.write(links_bling)
+
+            data.append({"SKU": folder, "Links": links_bling_excel})
 
     df = pd.DataFrame(data)
     df.to_excel("converted/result.xlsx", index=False, engine="openpyxl")
