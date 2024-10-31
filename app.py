@@ -7,6 +7,7 @@ from PIL import Image
 import base64
 import urllib.request
 import re
+import shutil
 
 def create_folder(folder_path):
     os.makedirs(folder_path, exist_ok=True)
@@ -94,6 +95,7 @@ def convert_images():
                 img.close()
                 print(f"[LOG] Imagem convertida: {name}")
 
+
 def upload_images(token):
     data = []
     for folder in os.listdir("result"):
@@ -119,6 +121,31 @@ def upload_images(token):
             data.append({"SKU": folder, "Links": links_bling})
 
     pd.DataFrame(data).to_excel("result/result.xlsx", index=False, engine="openpyxl")
+
+
+def clean_folder():
+    option = int(input("""[1] Continuar [2] Limpar as pastas e continuar: 
+[:] """))
+
+    if option == 1:
+        return None
+
+    if option == 2:
+        for file in os.listdir("result"):
+            file_path = os.path.join("result", file)
+            if os.path.isfile(file_path):
+                os.remove(file_path)
+            elif os.path.isdir(file_path):
+                shutil.rmtree(file_path)
+
+        for file in os.listdir("images"):
+            file_path = os.path.join("images", file)
+            if os.path.isfile(file_path):
+                os.remove(file_path)
+            elif os.path.isdir(file_path):
+                shutil.rmtree(file_path)
+
+        print("[LOG] Pastas 'result' e 'images' limpas com sucesso.")
 
 
 def input_mlb():
@@ -149,6 +176,7 @@ Seleção: """))
             if mlb is None:
                 break
             get_images(mlb)
+            clean_folder()
 
     elif option == 3:
         while True:
@@ -158,6 +186,8 @@ Seleção: """))
             get_images(mlb)
             convert_images()
             upload_images(token)
+            clean_folder()
+
 
 if __name__ == "__main__":
     main()
